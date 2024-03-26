@@ -2,7 +2,7 @@
 
 ## Overview
 
-We examine data about Immigration rates in United States
+We examine data about Immigration rates in United States. More focused on how the reduction of diploma affects immigrants and their employment
 
 
 ## File Structure
