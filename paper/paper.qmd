@@ -28,7 +28,9 @@ library(marginaleffects)
 
 
 ```{r}
-
+#| echo: false
+#| warning: false
+#| message: false
 darwin <-
   gutenberg_download(
     gutenberg_id = 2009,
@@ -45,6 +47,9 @@ write_csv(darwin, "../data/raw_data/darwin.csv")
 
 
 ```{r}
+#| echo: false
+#| warning: false
+#| message: false
 harry <- pdf_text("../other/literature/HarryAzkaban.pdf")
 class(harry)
 harry <- tibble(
@@ -61,6 +66,9 @@ write_csv(harry, "../data/raw_data/harry.csv")
 
 
 ```{r}
+#| echo: false
+#| warning: false
+#| message: false
 darwin <- read_csv(
   "../data/raw_data/darwin.csv",
   col_types = cols(
@@ -106,6 +114,9 @@ y_i|\lambda_i &\sim \mbox{Poisson}(\lambda_i) \\
 
 We run the model in R [@citeR] using the `rstanarm` package of @rstanarm. We use the default priors from `rstanarm`.
 ```{r}
+#| echo: false
+#| warning: false
+#| message: false
 darwin_nature <-
   stan_glm(
     natural_count ~ word_count,
@@ -123,6 +134,9 @@ saveRDS(
 ```
 
 ```{r}
+#| echo: false
+#| warning: false
+#| message: false
 plot_predictions(darwin_nature, condition = "word_count") +
   labs(x = "Number of words",
        y = "Average number of \"natural\"s in the first 10 lines") +
@@ -149,8 +163,38 @@ y_i|\lambda_i &\sim \mbox{Poisson}(\lambda_i) \\
 \beta_1 &\sim \mbox{Normal}(0, 2.5) \\
 \end{align}
 
-We run the model in R [@citeR] using the `rstanarm` package of @rstanarm. We use the default priors from `rstanarm`.
 
+We run the model in R [@citeR] using the `rstanarm` package of @rstanarm. We use the default priors from `rstanarm`.
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+darwin_magic <-
+  stan_glm(
+    magic_count ~ word_count,
+    data = darwin_reduced,
+    family = poisson(link = "log"),
+    prior = normal(location = 0, scale = 2.5, autoscale = TRUE),
+    prior_intercept = normal(location = 0, scale = 2.5, autoscale = TRUE),
+    seed = 853
+  )
+
+saveRDS(
+  darwin_magic,
+  file = "../models/darwin_magic.rds"
+)
+```
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+plot_predictions(darwin_magic, condition = "word_count") +
+  labs(x = "Number of words",
+       y = "Average number of \"magic\"s or \"miracle\"s appearing") +
+  theme_classic()
+```
+As we can see here there is almost no correlation at all. 
 
 ### Model justification
 
@@ -212,59 +256,6 @@ Weaknesses and next steps should also be included.
 \appendix
 
 # Appendix {-}
-
-
-# Additional data details
-
-# Model details {#sec-model-details}
-
-## Posterior predictive check
-
-In @fig-ppcheckandposteriorvsprior-1 we implement a posterior predictive check. This shows...
-
-In @fig-ppcheckandposteriorvsprior-2 we compare the posterior with the prior. This shows... 
-
-```{r}
-#| eval: true
-#| echo: false
-#| message: false
-#| warning: false
-#| label: fig-ppcheckandposteriorvsprior
-#| layout-ncol: 2
-#| fig-cap: "Examining how the model fits, and is affected by, the data"
-#| fig-subcap: ["Posterior prediction check", "Comparing the posterior with the prior"]
-
-pp_check(first_model) +
-  theme_classic() +
-  theme(legend.position = "bottom")
-
-posterior_vs_prior(first_model) +
-  theme_minimal() +
-  scale_color_brewer(palette = "Set1") +
-  theme(legend.position = "bottom") +
-  coord_flip()
-```
-
-## Diagnostics
-
-@fig-stanareyouokay-1 is a trace plot. It shows... This suggests...
-
-@fig-stanareyouokay-2 is a Rhat plot. It shows... This suggests...
-
-```{r}
-#| echo: false
-#| eval: true
-#| message: false
-#| warning: false
-#| label: fig-stanareyouokay
-#| fig-cap: "Checking the convergence of the MCMC algorithm"
-#| fig-subcap: ["Trace plot", "Rhat plot"]
-#| layout-ncol: 2
-
-plot(first_model, "trace")
-
-plot(first_model, "rhat")
-```
 
 
 
