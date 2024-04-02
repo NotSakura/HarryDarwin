@@ -1,8 +1,8 @@
-# An analysis of Pokemon data
+# Immigration and Education
 
 ## Overview
 
-We examine data about Pokemon. We estimate an Bayesian hierarchical model which explains their attributes based on their functionality.
+We examine data about Immigration rates in United States. More focused on how the reduction of diploma affects immigrants and their employment
 
 
 ## File Structure
