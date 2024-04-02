@@ -1,11 +1,10 @@
 #### Preamble ####
-# Purpose: Models... [...UPDATE THIS...]
-# Author: Rohan Alexander [...UPDATE THIS...]
-# Date: 11 February 2023 [...UPDATE THIS...]
-# Contact: rohan.alexander@utoronto.ca [...UPDATE THIS...]
-# License: MIT
-# Pre-requisites: [...UPDATE THIS...]
-# Any other information needed? [...UPDATE THIS...]
+# Purpose: Models
+# Author: Shreya Sakura Noskor
+# Date: April 1st 2024
+# Contact: sakura.noskor@mail.utoronto.ca
+# Pre-requisites: Harry Potter book obtained from pdf drives
+
 
 
 #### Workspace setup ####
@@ -13,25 +12,22 @@ library(tidyverse)
 library(rstanarm)
 
 #### Read data ####
-analysis_data <- read_csv("data/analysis_data/analysis_data.csv")
+darwin_reduced <- read_csv("data/analysis_data/darwin_reduced.csv")
 
 ### Model data ####
-first_model <-
+darwin_nature <-
   stan_glm(
-    formula = flying_time ~ length + width,
-    data = analysis_data,
-    family = gaussian(),
+    natural_count ~ word_count,
+    data = darwin_reduced,
+    family = poisson(link = "log"),
     prior = normal(location = 0, scale = 2.5, autoscale = TRUE),
     prior_intercept = normal(location = 0, scale = 2.5, autoscale = TRUE),
-    prior_aux = exponential(rate = 1, autoscale = TRUE),
     seed = 853
   )
 
-
-#### Save model ####
 saveRDS(
-  first_model,
-  file = "models/first_model.rds"
+  darwin_nature,
+  file = "../models/darwin_nature.rds"
 )
 
 

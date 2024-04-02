@@ -18,6 +18,12 @@ bibliography: references.bib
 
 library(tidyverse)
 library(gutenbergr)
+library(pdftools)
+library(arrow)
+library(dplyr)
+library(stringr)
+library(rstanarm)
+library(marginaleffects)
 ```
 
 
@@ -34,7 +40,48 @@ darwin
 write_csv(darwin, "../data/raw_data/darwin.csv")
 
 
+
 ```
+
+
+```{r}
+harry <- pdf_text("../other/literature/HarryAzkaban.pdf")
+class(harry)
+harry <- tibble(
+  raw_text = harry,
+  page_number = c(1:454)
+)
+
+harry <- 
+  separate_rows(harry, raw_text, sep = "\\n", convert = FALSE)
+
+write_csv(harry, "../data/raw_data/harry.csv")
+
+```
+
+
+```{r}
+darwin <- read_csv(
+  "../data/raw_data/darwin.csv",
+  col_types = cols(
+    gutenberg_id = col_integer(),
+    text = col_character()
+  )
+)
+
+
+
+darwin_reduced <- darwin |>
+  filter(!is.na(text)) |> 
+  mutate(natural_count = str_count(text, regex('natural', ignore_case = T)), 
+         magic_count = str_count(text, regex('magic|miracle', ignore_case = T)), 
+         word_count = str_count(text, "\\w+"))
+
+write_csv(darwin_reduced, "../data/analysis_data/darwin_reduced.csv")
+arrow::write_parquet(darwin_reduced, "../data/analysis_data/darwin_reduced.parquet")
+```
+
+
 
 
 # Introduction
@@ -46,17 +93,60 @@ write_csv(darwin, "../data/raw_data/darwin.csv")
 
 # Model
 
-## Model set-up
+## Natural and the 2 texts
 
-Define $y_i$ as the number of seconds that the plane remained aloft. Then $\beta_i$ is the wing width and $\gamma_i$ is the wing length, both measured in millimeters.  
+Define $y_i$ is the number of times "natural" appeared in the text and the explanatory variable is the number of words in the line.
 
 \begin{align} 
-y_i|\mu_i, \sigma &\sim \mbox{Normal}(\mu_i, \sigma) \\
-\mu_i &= \alpha + \beta_i + \gamma_i\\
-\alpha &\sim \mbox{Normal}(0, 2.5) \\
-\beta &\sim \mbox{Normal}(0, 2.5) \\
-\gamma &\sim \mbox{Normal}(0, 2.5) \\
-\sigma &\sim \mbox{Exponential}(1)
+y_i|\lambda_i &\sim \mbox{Poisson}(\lambda_i) \\
+\mbox{log}(\lambda_i) &= \beta_0 + \beta_1 \times \mbox{Number } \mbox{of } \mbox{Words}_i\\
+\beta_0 &\sim \mbox{Normal}(0, 2.5) \\
+\beta_1 &\sim \mbox{Normal}(0, 2.5) \\
+\end{align}
+
+We run the model in R [@citeR] using the `rstanarm` package of @rstanarm. We use the default priors from `rstanarm`.
+```{r}
+darwin_nature <-
+  stan_glm(
+    natural_count ~ word_count,
+    data = darwin_reduced,
+    family = poisson(link = "log"),
+    prior = normal(location = 0, scale = 2.5, autoscale = TRUE),
+    prior_intercept = normal(location = 0, scale = 2.5, autoscale = TRUE),
+    seed = 853
+  )
+
+saveRDS(
+  darwin_nature,
+  file = "../models/darwin_nature.rds"
+)
+```
+
+```{r}
+plot_predictions(darwin_nature, condition = "word_count") +
+  labs(x = "Number of words",
+       y = "Average number of \"natural\"s in the first 10 lines") +
+  theme_classic()
+```
+Negative relation it seems
+
+
+
+
+### Model justification
+
+We expect a positive relationship between the size of the wings and time spent aloft. In particular...
+
+We can use maths by including latex between dollar signs, for instance $\theta$.
+
+## "Magic" and the 2 texts
+Define $y_i$ is the number of times "magic" or "miracle" appeared in the text and the explanatory variable is the number of words in the line.
+
+\begin{align} 
+y_i|\lambda_i &\sim \mbox{Poisson}(\lambda_i) \\
+\mbox{log}(\lambda_i) &= \beta_0 + \beta_1 \times \mbox{Number } \mbox{of } \mbox{Words}_i\\
+\beta_0 &\sim \mbox{Normal}(0, 2.5) \\
+\beta_1 &\sim \mbox{Normal}(0, 2.5) \\
 \end{align}
 
 We run the model in R [@citeR] using the `rstanarm` package of @rstanarm. We use the default priors from `rstanarm`.
@@ -67,7 +157,6 @@ We run the model in R [@citeR] using the `rstanarm` package of @rstanarm. We use
 We expect a positive relationship between the size of the wings and time spent aloft. In particular...
 
 We can use maths by including latex between dollar signs, for instance $\theta$.
-
 
 # Results
 

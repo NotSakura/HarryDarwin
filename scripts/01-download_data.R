@@ -1,26 +1,43 @@
 #### Preamble ####
-# Purpose: Downloads and saves the data from [...UPDATE THIS...]
-# Author: Rohan Alexander [...UPDATE THIS...]
-# Date: 11 February 2023 [...UPDATE THIS...]
-# Contact: rohan.alexander@utoronto.ca [...UPDATE THIS...]
-# License: MIT
-# Pre-requisites: [...UPDATE THIS...]
-# Any other information needed? [...UPDATE THIS...]
+# Purpose: Downloads and saves the data from data folder
+# Author: Shreya Sakura Noskor
+# Date: April 1st 2024
+# Contact: sakura.noskor@mail.utoronto.ca
+# Pre-requisites: Harry Potter book obtained from pdf drives
 
 
 #### Workspace setup ####
-library(opendatatoronto)
 library(tidyverse)
-# [...UPDATE THIS...]
+library(gutenbergr)
+library(pdftools)
+library(arrow)
+library(dplyr)
+library(stringr)
+library(rstanarm)
+library(marginaleffects)
 
 #### Download data ####
-# [...ADD CODE HERE TO DOWNLOAD...]
 
+darwin <-
+  gutenberg_download(
+    gutenberg_id = 2009,
+    mirror = "https://gutenberg.pglaf.org/"
+  )
 
+darwin
 
-#### Save data ####
-# [...UPDATE THIS...]
-# change the_raw_data to whatever name you assigned when you downloaded it.
-write_csv(the_raw_data, "inputs/data/raw_data.csv") 
+write_csv(darwin, "../data/raw_data/darwin.csv")
 
          
+
+harry <- pdf_text("../other/literature/HarryAzkaban.pdf")
+class(harry)
+harry <- tibble(
+  raw_text = harry,
+  page_number = c(1:454)
+)
+
+harry <- 
+  separate_rows(harry, raw_text, sep = "\\n", convert = FALSE)
+
+write_csv(harry, "../data/raw_data/harry.csv")

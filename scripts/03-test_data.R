@@ -1,15 +1,17 @@
 #### Preamble ####
-# Purpose: Tests... [...UPDATE THIS...]
-# Author: Rohan Alexander [...UPDATE THIS...]
-# Date: 11 February 2023 [...UPDATE THIS...]
-# Contact: rohan.alexander@utoronto.ca [...UPDATE THIS...]
-# License: MIT
-# Pre-requisites: [...UPDATE THIS...]
-# Any other information needed? [...UPDATE THIS...]
+# Purpose: Tests
+# Author: Shreya Sakura Noskor
+# Date: April 1st 2024
+# Contact: sakura.noskor@mail.utoronto.ca
+# Pre-requisites: Harry Potter book obtained from pdf drives
+
 
 
 #### Workspace setup ####
 library(tidyverse)
-# [...UPDATE THIS...]
+
 
 #### Test data ####
+
+darwin_reduced <- read_csv("./data/analysis_data/darwin_reduced.csv")
+class(darwin_reduced$text) == charecter
