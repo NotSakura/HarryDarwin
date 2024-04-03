@@ -2,13 +2,20 @@
 title: "Magic Vs Evolution"
 subtitle: "Or more specifically language in Harry Potter vs Darwin's Natural Selection"
 author: "Shreya Sakura Noskor"
-thanks: "Code and data are available at: LINK."
+thanks: "Code and data are available at: [HarryDarwin](https://github.com/NotSakura/HarryDarwin.git)"
 date: today
 date-format: long
 abstract: "First sentence. Second sentence. Third sentence. Fourth sentence."
 format: pdf
+header-includes:
+  - \usepackage{float} 
+  - \floatplacement{table}{H}
 number-sections: true
+include-in-header: 
+  text:
+    \renewcommand{\abstractname}{Abstract}
 bibliography: references.bib
+toc: true
 ---
 
 ```{r}
@@ -77,16 +84,37 @@ darwin <- read_csv(
   )
 )
 
+harry <- read_csv(
+  "../data/raw_data/harry.csv",
+  col_types = cols(
+    page_num = col_integer(),
+    text = col_character()
+  )
+)
+
 
 
 darwin_reduced <- darwin |>
   filter(!is.na(text)) |> 
-  mutate(natural_count = str_count(text, regex('natural', ignore_case = T)), 
+  mutate(natural_count = str_count(text, regex('natural|species', ignore_case = T)), 
          magic_count = str_count(text, regex('magic|miracle', ignore_case = T)), 
          word_count = str_count(text, "\\w+"))
 
 write_csv(darwin_reduced, "../data/analysis_data/darwin_reduced.csv")
 arrow::write_parquet(darwin_reduced, "../data/analysis_data/darwin_reduced.parquet")
+
+
+harry_reduced <- harry |>
+  filter(!is.na(raw_text)) |> 
+  mutate(natural_count = str_count(raw_text, regex('natural|species', ignore_case = T)), 
+         magic_count = str_count(raw_text, regex('magic|miracle', ignore_case = T)), 
+         word_count = str_count(raw_text, "\\w+"))
+
+write_csv(darwin_reduced, "../data/analysis_data/harry_reduced.csv")
+arrow::write_parquet(darwin_reduced, "../data/analysis_data/harry_reduced.parquet")
+
+
+
 ```
 
 
@@ -94,16 +122,24 @@ arrow::write_parquet(darwin_reduced, "../data/analysis_data/darwin_reduced.parqu
 
 # Introduction
 
-
+Research Question: Does the topic we talk about influence our language, or does the laguage influence the theme of the topic. 
 
 
 # Data {#sec-data}
+
+## Source
+The data utilized was from Project Gutenburg and PDF Drives and with the help of R [@citeR] we were able to create this paper. Also code for making the models were made referencing Telling Stories by Rohan Alexander[@rohan]. Other R packages were used to clean, process and model the data such as, @tidy, @gut, @rstanarm, @pdf, @dplyr, @arrow, @stringr, @marginaleffects.
+
+## Variables
+
+### Distribution of each word with each text 
+
 
 # Model
 
 ## Natural and the 2 texts
 
-Define $y_i$ is the number of times "natural" appeared in the text and the explanatory variable is the number of words in the line.
+Define $y_i$ is the number of times "natural" appeared in each text and the explanatory variable is the number of words in the line. We predict to see that there is a positive correlation in Darwin's text but not in Harry Potter due to the difference in topics.
 
 \begin{align} 
 y_i|\lambda_i &\sim \mbox{Poisson}(\lambda_i) \\
@@ -131,6 +167,22 @@ saveRDS(
   darwin_nature,
   file = "../models/darwin_nature.rds"
 )
+
+
+harry_nature <-
+  stan_glm(
+    natural_count ~ word_count,
+    data = harry_reduced,
+    family = poisson(link = "log"),
+    prior = normal(location = 0, scale = 2.5, autoscale = TRUE),
+    prior_intercept = normal(location = 0, scale = 2.5, autoscale = TRUE),
+    seed = 853
+  )
+
+saveRDS(
+  harry_nature,
+  file = "../models/harry_nature.rds"
+)
 ```
 
 ```{r}
@@ -142,16 +194,22 @@ plot_predictions(darwin_nature, condition = "word_count") +
        y = "Average number of \"natural\"s in the first 10 lines") +
   theme_classic()
 ```
-Negative relation it seems
+positive correlation it seems
 
-
-
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+plot_predictions(harry_nature, condition = "word_count") +
+  labs(x = "Number of words",
+       y = "Average number of \"natural\"s in the first 10 lines") +
+  theme_classic()
+```
+No correlation at all
 
 ### Model justification
 
-We expect a positive relationship between the size of the wings and time spent aloft. In particular...
-
-We can use maths by including latex between dollar signs, for instance $\theta$.
+We predict to see that there is a positive correlation in Darwin's text but not in Harry Potter due to the difference in topics.
 
 ## "Magic" and the 2 texts
 Define $y_i$ is the number of times "magic" or "miracle" appeared in the text and the explanatory variable is the number of words in the line.
@@ -183,6 +241,22 @@ saveRDS(
   darwin_magic,
   file = "../models/darwin_magic.rds"
 )
+
+
+harry_magic <-
+  stan_glm(
+    magic_count ~ word_count,
+    data = harry_reduced,
+    family = poisson(link = "log"),
+    prior = normal(location = 0, scale = 2.5, autoscale = TRUE),
+    prior_intercept = normal(location = 0, scale = 2.5, autoscale = TRUE),
+    seed = 853
+  )
+
+saveRDS(
+  harry_magic,
+  file = "../models/harry_magic.rds"
+)
 ```
 
 ```{r}
@@ -196,11 +270,20 @@ plot_predictions(darwin_magic, condition = "word_count") +
 ```
 As we can see here there is almost no correlation at all. 
 
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+plot_predictions(harry_magic, condition = "word_count") +
+  labs(x = "Number of words",
+       y = "Average number of \"magic\"s or \"miracle\"s appearing") +
+  theme_classic()
+```
+
 ### Model justification
 
-We expect a positive relationship between the size of the wings and time spent aloft. In particular...
+We predict to see that there is a positive correlation in Harry Potter but not in Darwin's text due to the difference in topics.
 
-We can use maths by including latex between dollar signs, for instance $\theta$.
 
 # Results
 
@@ -214,20 +297,46 @@ Our results are summarized in @tbl-modelresults.
 
 library(rstanarm)
 
-first_model <-
-  readRDS(file = here::here("models/first_model.rds"))
+darwin_nature <-
+  readRDS(file = "../models/darwin_nature.rds")
+
+darwin_magic <-
+  readRDS(file = "../models/darwin_magic.rds")
+
+
+harry_nature <-
+  readRDS(file = "../models/harry_nature.rds")
+
+harry_magic <-
+  readRDS(file = "../models/harry_magic.rds")
 ```
 
 ```{r}
 #| echo: false
 #| eval: true
-#| label: tbl-modelresults
-#| tbl-cap: "Explanatory models of flight time based on wing width and wing length"
+#| label: tbl-darwin_nature
+#| tbl-cap: "Model Summary showcasing the correlation coeffcient for Darwin's evolution book and the word nature"
 #| warning: false
 
 modelsummary::modelsummary(
   list(
-    "First model" = first_model
+    "darwin and nature" = darwin_nature
+  ),
+  statistic = "mad",
+  fmt = 2
+)
+```
+
+```{r}
+#| echo: false
+#| eval: true
+#| label: tbl-darwin_magic
+#| tbl-cap: "Model Summary showcasing the correlation coeffcient for Darwin's evolution book and the word magic"
+#| warning: false
+
+modelsummary::modelsummary(
+  list(
+    "darwin and magic" = darwin_magic
   ),
   statistic = "mad",
   fmt = 2
@@ -236,14 +345,45 @@ modelsummary::modelsummary(
 
 
 
+```{r}
+#| echo: false
+#| eval: true
+#| label: tbl-harry_nature
+#| tbl-cap: "Model Summary showcasing the correlation coeffcient for  Harry Potter and The Prisoner of Azkaban and the word nature"
+#| warning: false
+
+modelsummary::modelsummary(
+  list(
+    "harry and nature" = harry_nature
+  ),
+  statistic = "mad",
+  fmt = 2
+)
+```
+
+```{r}
+#| echo: false
+#| eval: true
+#| label: tbl-harry_magic
+#| tbl-cap: "Model Summary showcasing the correlation coeffcient for Harry Potter and The Prisoner of Azkaban and the word magic"
+#| warning: false
+
+modelsummary::modelsummary(
+  list(
+    "harry and magic" = harry_magic
+  ),
+  statistic = "mad",
+  fmt = 2
+)
+```
+
 
 # Discussion
 
-## First discussion point {#sec-first-point}
+## Why is the result the way it is {#sec-first-point}
 
-If my paper were 10 pages, then should be be at least 2.5 pages. The discussion is a chance to show off what you know and what you learnt from all this. 
 
-## Second discussion point
+## Importance
 
 ## Third discussion point
 
