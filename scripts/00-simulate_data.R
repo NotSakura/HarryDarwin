@@ -1,5 +1,5 @@
 #### Preamble ####
-# Purpose: Simulates an analysis dataset about number of time the word miracle, magic or natural will show up in text. 
+# Purpose: Simulates an analysis dataset about number of time the word miracle, magic or natural will show up in text.
 # Author: Shreya Sakura Noskor
 # Date: April 1st 2024
 # Contact: sakura.noskor@mail.utoronto.ca
@@ -42,10 +42,3 @@ count_of_natural_simulation_harry <-
     number_words_in_line = runif(min = 0, max = 15, n = 30) |> round(0),
     number_natural = rpois(n = 30, lambda = 5)
   )
-
-
-
-
-
-
-

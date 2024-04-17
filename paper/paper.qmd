@@ -1,11 +1,11 @@
 ---
 title: "Magic Vs Evolution"
-subtitle: "Or more specifically language in Harry Potter vs Darwin's Natural Selection"
+subtitle: "Or more specifically language used in Harry Potter vs Darwin's Natural Selection"
 author: "Shreya Sakura Noskor"
 thanks: "Code and data are available at: [HarryDarwin](https://github.com/NotSakura/HarryDarwin.git)"
 date: today
 date-format: long
-abstract: "First sentence. Second sentence. Third sentence. Fourth sentence."
+abstract: "This paper analyses the frequency of occurrence of certain words (\"magic\" and \"natural\") in the books Harry Potter and The Prisoner of Azkaban and Charles Darwin's Book of Evolution. Using the data provided by Gutenburg's project and PDFDrives, we were able to find the related data and analyse whether a topic of the book had any effect on the number of occurences of each word in each text. The data found here will be realted to a ver important topic in Machine Learning; clusetering. This is when a machine is able to see the content of data, and group them together based on what it sees. "
 format: pdf
 header-includes:
   - \usepackage{float} 
@@ -38,44 +38,6 @@ library(marginaleffects)
 #| echo: false
 #| warning: false
 #| message: false
-darwin <-
-  gutenberg_download(
-    gutenberg_id = 2009,
-    mirror = "https://gutenberg.pglaf.org/"
-  )
-
-darwin
-
-write_csv(darwin, "../data/raw_data/darwin.csv")
-
-
-
-```
-
-
-```{r}
-#| echo: false
-#| warning: false
-#| message: false
-harry <- pdf_text("../other/literature/HarryAzkaban.pdf")
-class(harry)
-harry <- tibble(
-  raw_text = harry,
-  page_number = c(1:454)
-)
-
-harry <- 
-  separate_rows(harry, raw_text, sep = "\\n", convert = FALSE)
-
-write_csv(harry, "../data/raw_data/harry.csv")
-
-```
-
-
-```{r}
-#| echo: false
-#| warning: false
-#| message: false
 darwin <- read_csv(
   "../data/raw_data/darwin.csv",
   col_types = cols(
@@ -95,34 +57,40 @@ harry <- read_csv(
 
 
 darwin_reduced <- darwin |>
-  filter(!is.na(text)) |> 
-  mutate(natural_count = str_count(text, regex('natural|species', ignore_case = T)), 
-         magic_count = str_count(text, regex('magic|miracle', ignore_case = T)), 
-         word_count = str_count(text, "\\w+"))
+  filter(!is.na(text)) |>
+  filter(!grepl("\\*", text)) |>
+  mutate(
+    natural_count = str_count(text, regex("natural|species", ignore_case = T)),
+    magic_count = str_count(text, regex("magic|miracle|wizard", ignore_case = T)),
+    word_count = str_count(text, "\\w+")
+  )
 
 write_csv(darwin_reduced, "../data/analysis_data/darwin_reduced.csv")
 arrow::write_parquet(darwin_reduced, "../data/analysis_data/darwin_reduced.parquet")
 
 
 harry_reduced <- harry |>
-  filter(!is.na(raw_text)) |> 
-  mutate(natural_count = str_count(raw_text, regex('natural|species', ignore_case = T)), 
-         magic_count = str_count(raw_text, regex('magic|miracle', ignore_case = T)), 
-         word_count = str_count(raw_text, "\\w+"))
+  filter(!is.na(raw_text)) |>
+  filter(!grepl("\\*", raw_text)) |>
+  mutate(
+    natural_count = str_count(raw_text, regex("natural|species", ignore_case = T)),
+    magic_count = str_count(raw_text, regex("magic|miracle|wizard", ignore_case = T)),
+    word_count = str_count(raw_text, "\\w+")
+  )
 
 write_csv(darwin_reduced, "../data/analysis_data/harry_reduced.csv")
 arrow::write_parquet(darwin_reduced, "../data/analysis_data/harry_reduced.parquet")
-
-
-
 ```
 
 
-
+Training machine learning models with language. the purpose of this text is not to discover a new thing but to helpl people understand the way machine learning models use these informations to train them. 
 
 # Introduction
 
 Research Question: Does the topic we talk about influence our language, or does the laguage influence the theme of the topic. 
+
+
+The estimand is how often the selected words appear in each of our texts. 
 
 
 # Data {#sec-data}
@@ -135,11 +103,81 @@ The data utilized was from Project Gutenburg and PDF Drives and with the help of
 ### Distribution of each word with each text 
 
 
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+#| #| label: tbl-nature
+#| tbl-cap: "Comparison of number of \"nature\"-realted words and the number of words in a line"
+
+combined_data <- bind_rows(
+  mutate(harry_reduced, dataset = "Harry"),
+  mutate(darwin_reduced, dataset = "Darwin")
+)
+
+combined_plot <- combined_data %>%
+  mutate(log_word_count = log(word_count + 1)) %>%
+  ggplot(aes(x = log_word_count, y = natural_count, color = dataset)) +
+  geom_jitter(alpha = 0.5) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
+  theme_minimal() +
+  scale_x_continuous(
+    trans = "log2",
+    breaks = c(0, 1, 2, 4, 8, 16, 32, 64, 128),
+    labels = c(0, 1, 2, 4, 8, 16, 32, 64, 128)
+  ) +
+  labs(
+    x = "Log(Number of words in the line)",
+    y = "Number of \"magic\" in the line",
+    color = "Dataset"
+  )
+
+# Display the combined plot
+print(combined_plot)
+```
+
+
+
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+#| label: tbl-magic
+#| tbl-cap: "Comparison of number of \"magic\"-realted words and the number of words in a line"
+
+
+
+# Create the combined plot
+combined_plot <- combined_data %>%
+  mutate(log_word_count = log(word_count + 1)) %>%
+  ggplot(aes(x = log_word_count, y = magic_count, color = dataset)) +
+  geom_jitter(alpha = 0.5) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
+  theme_minimal() +
+  scale_x_continuous(
+    trans = "log2",
+    breaks = c(0, 1, 2, 4, 8, 16, 32, 64, 128),
+    labels = c(0, 1, 2, 4, 8, 16, 32, 64, 128)
+  ) +
+  labs(
+    x = "Log(Number of words in the line)",
+    y = "Number of \"magic\" in the line",
+    color = "Dataset"
+  )
+
+# Display the combined plot
+print(combined_plot)
+```
+
+
+
 # Model
 
 ## Natural and the 2 texts
 
-Define $y_i$ is the number of times "natural" appeared in each text and the explanatory variable is the number of words in the line. We predict to see that there is a positive correlation in Darwin's text but not in Harry Potter due to the difference in topics.
+Define $y_i$ is the number of times "natural" appeared in each text and the explanatory variable is the number of words in the line. This means that we have 4 models in total with the $y_i$'s being, number of times the word "natural" and "species" showed up in The book of Evolution or Harry Potter and the prisoner of azkaban. Also the number of times the word "magic", "wizard" and "miracle" showed up in The book of Evolution or Harry Potter and the prisoner of azkaban. We predict to see that there is a positive correlation in Darwin's text but not in Harry Potter due to the difference in topics. 
 
 \begin{align} 
 y_i|\lambda_i &\sim \mbox{Poisson}(\lambda_i) \\
@@ -153,45 +191,24 @@ We run the model in R [@citeR] using the `rstanarm` package of @rstanarm. We use
 #| echo: false
 #| warning: false
 #| message: false
-darwin_nature <-
-  stan_glm(
-    natural_count ~ word_count,
-    data = darwin_reduced,
-    family = poisson(link = "log"),
-    prior = normal(location = 0, scale = 2.5, autoscale = TRUE),
-    prior_intercept = normal(location = 0, scale = 2.5, autoscale = TRUE),
-    seed = 853
-  )
-
-saveRDS(
-  darwin_nature,
-  file = "../models/darwin_nature.rds"
-)
+darwin_nature <- readRDS("../models/darwin_nature.rds")
 
 
-harry_nature <-
-  stan_glm(
-    natural_count ~ word_count,
-    data = harry_reduced,
-    family = poisson(link = "log"),
-    prior = normal(location = 0, scale = 2.5, autoscale = TRUE),
-    prior_intercept = normal(location = 0, scale = 2.5, autoscale = TRUE),
-    seed = 853
-  )
-
-saveRDS(
-  harry_nature,
-  file = "../models/harry_nature.rds"
-)
+harry_nature <- readRDS("../models/harry_nature.rds")
 ```
 
 ```{r}
 #| echo: false
 #| warning: false
 #| message: false
+#| label: fig-nature_pred_darwin
+#| fig-cap: "Predicted number of \"nature\"-realted words in each line based on number of words in Darwin's Book "
+
 plot_predictions(darwin_nature, condition = "word_count") +
-  labs(x = "Number of words",
-       y = "Average number of \"natural\"s in the first 10 lines") +
+  labs(
+    x = "Number of words",
+    y = "Average number of \"natural\"s in the first 10 lines"
+  ) +
   theme_classic()
 ```
 positive correlation it seems
@@ -200,9 +217,15 @@ positive correlation it seems
 #| echo: false
 #| warning: false
 #| message: false
+#| label: fig-nature_pred_harry
+#| fig-cap: "Predicted number of \"nature\"-realted words in each line based on number of words in Harry Potter "
+
+
 plot_predictions(harry_nature, condition = "word_count") +
-  labs(x = "Number of words",
-       y = "Average number of \"natural\"s in the first 10 lines") +
+  labs(
+    x = "Number of words",
+    y = "Average number of \"natural\"s in the first 10 lines"
+  ) +
   theme_classic()
 ```
 No correlation at all
@@ -227,45 +250,23 @@ We run the model in R [@citeR] using the `rstanarm` package of @rstanarm. We use
 #| echo: false
 #| warning: false
 #| message: false
-darwin_magic <-
-  stan_glm(
-    magic_count ~ word_count,
-    data = darwin_reduced,
-    family = poisson(link = "log"),
-    prior = normal(location = 0, scale = 2.5, autoscale = TRUE),
-    prior_intercept = normal(location = 0, scale = 2.5, autoscale = TRUE),
-    seed = 853
-  )
 
-saveRDS(
-  darwin_magic,
-  file = "../models/darwin_magic.rds"
-)
+darwin_magic <- readRDS("../models/darwin_magic.rds")
 
-
-harry_magic <-
-  stan_glm(
-    magic_count ~ word_count,
-    data = harry_reduced,
-    family = poisson(link = "log"),
-    prior = normal(location = 0, scale = 2.5, autoscale = TRUE),
-    prior_intercept = normal(location = 0, scale = 2.5, autoscale = TRUE),
-    seed = 853
-  )
-
-saveRDS(
-  harry_magic,
-  file = "../models/harry_magic.rds"
-)
+harry_magic <- readRDS("../models/harry_magic.rds")
 ```
 
 ```{r}
 #| echo: false
 #| warning: false
 #| message: false
+#| label: fig-magic_pred_darwin
+#| fig-cap: "Predicted number of \"magic\"-realted words in each line based on number of words in Darwin's Book "
 plot_predictions(darwin_magic, condition = "word_count") +
-  labs(x = "Number of words",
-       y = "Average number of \"magic\"s or \"miracle\"s appearing") +
+  labs(
+    x = "Number of words",
+    y = "Average number of \"magic\"s or \"miracle\"s appearing"
+  ) +
   theme_classic()
 ```
 As we can see here there is almost no correlation at all. 
@@ -274,9 +275,15 @@ As we can see here there is almost no correlation at all.
 #| echo: false
 #| warning: false
 #| message: false
+#| label: fig-magic_pred_harry
+#| fig-cap: "Predicted number of \"magic\"-realted words in each line based on number of words in Harry Potter "
+
+
 plot_predictions(harry_magic, condition = "word_count") +
-  labs(x = "Number of words",
-       y = "Average number of \"magic\"s or \"miracle\"s appearing") +
+  labs(
+    x = "Number of words",
+    y = "Average number of \"magic\"s or \"miracle\"s appearing"
+  ) +
   theme_classic()
 ```
 
@@ -287,29 +294,7 @@ We predict to see that there is a positive correlation in Harry Potter but not i
 
 # Results
 
-Our results are summarized in @tbl-modelresults.
-
-```{r}
-#| echo: false
-#| eval: true
-#| warning: false
-#| message: false
-
-library(rstanarm)
-
-darwin_nature <-
-  readRDS(file = "../models/darwin_nature.rds")
-
-darwin_magic <-
-  readRDS(file = "../models/darwin_magic.rds")
-
-
-harry_nature <-
-  readRDS(file = "../models/harry_nature.rds")
-
-harry_magic <-
-  readRDS(file = "../models/harry_magic.rds")
-```
+Our results are summarized below.
 
 ```{r}
 #| echo: false
@@ -403,5 +388,3 @@ Weaknesses and next steps should also be included.
 
 
 # References
-
-
