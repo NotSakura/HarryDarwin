@@ -5,7 +5,7 @@ author: "Shreya Sakura Noskor"
 thanks: "Code and data are available at: [HarryDarwin](https://github.com/NotSakura/HarryDarwin.git)"
 date: today
 date-format: long
-abstract: "This paper analyses the frequency of occurrence of certain words (\"magic\" and \"natural\") in the books Harry Potter and The Prisoner of Azkaban and Charles Darwin's Book of Evolution. Using the data provided by Gutenburg's project and PDFDrives, we were able to find the related data and analyse whether a topic of the book had any effect on the number of occurences of each word in each text. The data found here will be realted to a ver important topic in Machine Learning; clusetering. This is when a machine is able to see the content of data, and group them together based on what it sees. "
+abstract: "This paper analyses the frequency of occurrence of certain words (\"magic\" and \"natural\") in the books Harry Potter and The Prisoner of Azkaban and Charles Darwin's Book of Evolution. Using the data provided by Gutenburg's project and Internet Archive, we were able to find the related data and analyze whether a topic of the book had any effect on the number of occurrences of each word in each text. The data found here will be related to a very important topic in Machine Learning; clustering. This is when a machine is able to see the content of data, and group them together based on what it sees. "
 format: pdf
 header-includes:
   - \usepackage{float} 
@@ -83,33 +83,44 @@ arrow::write_parquet(darwin_reduced, "../data/analysis_data/harry_reduced.parque
 ```
 
 
-Training machine learning models with language. the purpose of this text is not to discover a new thing but to helpl people understand the way machine learning models use these informations to train them. 
 
 # Introduction
 
-Research Question: Does the topic we talk about influence our language, or does the laguage influence the theme of the topic. 
-
-
-The estimand is how often the selected words appear in each of our texts. 
+  
+  This paper looks at 2 completely different texts in terms of themes; Charles Darwin's Books of Evolution [@darwin] and Harry Potter and the Prisoner of Azkaban [@harry]. The book of Evolution, Origin of Species by Charles Darwin was a book that came out in 1859, and it revolutionalized evolutional biology. Darwin described in this book the process of evolution by natural selection where all animals change some sort of aspect of themselves (either physical quality or behavior), that helps them survive in the world longer. The process of change throughout the million years is called evolution and natural selection is the idea that animals with desirable traits survive longer in nature. Some examples of this include the beaks of birds where food is limited or the color of fur to attract mates. Overall this non-fiction book changed the scientific world's view on how animals (including humans) work. It is a theory, but it is supported by millions of years of evidence found in fossil fuels. 
+  Harry Potter and the Prisoner of Azkaban on the other hand is a completely different book. This is a fiction book written by J.K. Rowling, that highlights the adventures of a young wizard named Harry Potter. This is the third book in the series and the reason why this was chosen specifically was because of the complete contrast in themes. Also, it is one of my favorite books to read at the time. 
+  
+  
+  Now coming to the main topic of the paper. There is 2 questions that this paper aims to answer: "How do the occurrences of “natural” and “magic” differ in terms of frequency and context between Darwin’s scientific work and Rowling’s fantasy novel?" and "How does this explain clustering in computer science?". The analysis section will answer the first question by showing various graphs and models but the discussion section will go more in-depth towards the second question. The estimand is how often the selected words appear in each of our texts. Additionally, the purpose of this paper is not argumentative nor is it to convince the reader of some hidden analysis found in our data. The goal of this is to help the reader understand how clustering in computer science works and how it may relate to the statistical models we look at here. 
+  
+  Language is a key aspect of everyday life. The vocabulary we use can often affect the theme and tone that we are aiming for when communicating with our audience. However, to an average reader, this may not seem like a very important topic that needs to be investigated. This is understandable as what insights can we gain from just observing the frequency of the occurrences of such thematic words; all we can tell from it is that the 2 texts have contrasting themes which we just know from the context of the title or the summary. However, such analysis is important because it can help understand a much higher level idea used in Computer Science called clustering. Clustering is the concept in Machine Learning where the computer needs to be able to group data in categories based on a feature that the data has. This is very helpful as usually the data is unsupervised (meaning there is no label/group associated with them) so this process helps find similarities. This paper finds that with each text the theme of the text greatly impacts the occurrences of the words "magic" and "natural", which is expected but this will help motivate the concept of clustering. 
+  
+  
+  This report is structured like so: Data section describing the data and the variables inspected, Model section showcasing the Regression Model used to perform the analysis. The result section shows the results of the model analysis as well as a summary for each model and lastly the Discussion section will go in-depth about what we see in the Data and Results section as well as what that means in terms of the concept we are explaining today; clustering. The Discussion section will also state possible limitations in our data. 
 
 
 # Data {#sec-data}
 
 ## Source
-The data utilized was from Project Gutenburg and PDF Drives and with the help of R [@citeR] we were able to create this paper. Also code for making the models were made referencing Telling Stories by Rohan Alexander[@rohan]. Other R packages were used to clean, process and model the data such as, @tidy, @gut, @rstanarm, @pdf, @dplyr, @arrow, @stringr, @marginaleffects.
+The data utilized was from Project Gutenberg and PDF Drives and with the help of R [@citeR] we were able to create this paper. Also, the code for making the models was made referencing Telling Stories by Rohan Alexander[@rohan]. Other R packages were used to clean, process, and model the data such as @tidy, @gut, @rstanarm, @pdf, @dplyr, @arrow, @stringr, @marginaleffects.
 
-## Variables
+## Variables and Measurement
+  The book of Evolution by Charles Darwin [@darwin] is collected from Project Gutenberg [@gut], which is a source known for its reliability in offering free EBooks as it collects the texts from the source. Harry Potter and the Prisoner of Azkaban by J.K. Rowling was collected from the Internet Archive [@inter]. Internet Archive is a very large platform, however, with millions of users who are able to upload anything they want. To combat this slightly, I compared a couple of pages from the Internet Archive to my own personal copy, and I was able to see that there are no changes in terms of content. 
+  I extracted the lines from each of the text and counted up the occurrence of each variable and used that as my form of measurement. The reason why I chose this as my data set was because it perfectly displays what I want to show; how the difference in topic affects the vocabulary and therefore aiding machines to categorizing them. 
+  Now for the variables. We first cleaned each text of any leading white spaces that would hinder our analysis and broke it down into sentences. Then I cleaned it up so that there are 4 major columns: text, natural_count, magic_count, and word_count. This was done to both texts. The "text" column shows the actual lines of the book. The `natural_count` shows the number of times the word "natural", or "species" appeared in that line. Throughout this paper we will refer to it as the word "natural", to not confuse the reader and also to keep things concise. But keep in mind that we are looking at both of these values because they are similar to each other, especially in the context they are used in the Book of Evolution [@darwin]. Next is the `magic_count` which takes a look at the number of times the word "magic", "miracle" and "wizard"  shows up in each book. Again, in this paper, we will refer to this as the number of times the word "magic" appears due to the overlapping theme of the words and to not confuse the reader. Lastly the variable `word_count` just counts the amount of lines in that word. This helps find important info like averages and predict if larger sentences have a higher frequency of each of the words. 
+
+
 
 ### Distribution of each word with each text 
 
-
+This section will briefly look at the correlation between the words and each individual text. 
 
 ```{r}
 #| echo: false
 #| warning: false
 #| message: false
-#| #| label: tbl-nature
-#| tbl-cap: "Comparison of number of \"nature\"-realted words and the number of words in a line"
+#| label: fig-nature
+#| fig-cap: "Comparison of number of \"nature\"-realted words and the number of words in a line"
 
 combined_data <- bind_rows(
   mutate(harry_reduced, dataset = "Harry"),
@@ -129,14 +140,14 @@ combined_plot <- combined_data %>%
   ) +
   labs(
     x = "Log(Number of words in the line)",
-    y = "Number of \"magic\" in the line",
+    y = "Number of \"natural\" in the line",
     color = "Dataset"
   )
 
 # Display the combined plot
 print(combined_plot)
 ```
-
+ @fig-nature shows the number of time the word "natural" or "species" show up in each line. Due to the fact that both books are not small -it has around 300-600 pages-, what we see is that there is a lot of data points. The dashed line is $y=x$ and it shows that if there were points on that line it means there is an average of 1 occurrence of the words per line. However for the most part we see that it is is below it meaning that not every line contains the words "natural" or "species". The bottom block shows that exactly where majority of the red and blue dots are concentrated around 0 meaning most lines in the text do not have these words. Additionally the faint blue shows that there is even fewer lines in Harry Potter that contain the word natural. Lastly the fact that some of the red dots are above the $y=x$ line means that there are lines with more than one occurrence of the words "natural" and "species".
 
 
 
@@ -144,8 +155,8 @@ print(combined_plot)
 #| echo: false
 #| warning: false
 #| message: false
-#| label: tbl-magic
-#| tbl-cap: "Comparison of number of \"magic\"-realted words and the number of words in a line"
+#| label: fig-magic
+#| fig-cap:  "Comparison of number of \"magic\"-realted words and the number of words in a line"
 
 
 
@@ -171,13 +182,16 @@ combined_plot <- combined_data %>%
 print(combined_plot)
 ```
 
+@fig-magic on the other hand shows the number of time the word "magic", "miracle" or "wizard" show up in each line. The dashed line is $y=x$ and it shows that if there were points on that line it means there is an average of 1 occurrence of the words per line. However for the most part we see that it is is below it meaning that not every line contains the words "magic", "miracle" or "wizard" . The bottom block shows that exactly where majority of the red and blue dots are concentrated around 0 meaning most lines in the text do not have these words. Additionally the faint red shows that there is even fewer lines in the Book Of Evolution that contain the word "magic". Lastly the fact that some of the blue dots are above the $y=x$ line means that there are lines with more than one occurrence of the words "magic", "miracle" or "wizard" .
 
 
 # Model
 
+We use a Poisson Regression model to show the correlation between the number fo words in a text and the number of times the word "magic", "miracle" or "wizard" appears or "natural" and "species" appear. 
+
 ## Natural and the 2 texts
 
-Define $y_i$ is the number of times "natural" appeared in each text and the explanatory variable is the number of words in the line. This means that we have 4 models in total with the $y_i$'s being, number of times the word "natural" and "species" showed up in The book of Evolution or Harry Potter and the prisoner of azkaban. Also the number of times the word "magic", "wizard" and "miracle" showed up in The book of Evolution or Harry Potter and the prisoner of azkaban. We predict to see that there is a positive correlation in Darwin's text but not in Harry Potter due to the difference in topics. 
+Define $y_i$ is the number of times "natural" appeared in each text and the explanatory variable is the number of words in the line. This means that we have 4 models in total with the $y_i$'s being, number of times the word "natural" and "species" showed up in The book of Evolution or Harry Potter and the Prisoner of Azkaban.  We predict to see that there is a positive correlation in Darwin's text but not in Harry Potter due to the difference in topics. 
 
 \begin{align} 
 y_i|\lambda_i &\sim \mbox{Poisson}(\lambda_i) \\
@@ -187,6 +201,30 @@ y_i|\lambda_i &\sim \mbox{Poisson}(\lambda_i) \\
 \end{align}
 
 We run the model in R [@citeR] using the `rstanarm` package of @rstanarm. We use the default priors from `rstanarm`.
+
+### Model justification
+  I predict to see that there is a positive correlation between the words "natural" and "species" in the Book of Evolution but a negative one in Harry Potter. This is due to the fact that the main topic of Charles Darwin's book is the concept of natural selection affecting different species. There are very limited ways to describe that process without using thoes 2 specific words. On the other had Harry Potter is a fictitious book that has very little to do with species and even little to do with nature. Hense in whatever context they do appear, it was not in the way it is used in Darwin's book. 
+
+## "Magic" and the 2 texts
+Define $y_i$ is the number of times "magic", "miracle" or "wizard"  appeared in the text and the explanatory variable is the number of words in the line.
+
+\begin{align} 
+y_i|\lambda_i &\sim \mbox{Poisson}(\lambda_i) \\
+\mbox{log}(\lambda_i) &= \beta_0 + \beta_1 \times \mbox{Number } \mbox{of } \mbox{Words}_i\\
+\beta_0 &\sim \mbox{Normal}(0, 2.5) \\
+\beta_1 &\sim \mbox{Normal}(0, 2.5) \\
+\end{align}
+
+We run the model in R [@citeR] using the `rstanarm` package of @rstanarm. We use the default priors from `rstanarm`.
+
+### Model justification
+  I predict the opposite for this case. I predict to see that there is a positive correlation between the words "magic", "miracle" or "wizard" in Harry Potter but a negative one in the Book of Evolution. This is, again,  due to the fact that the main topic of Harry Potter is that a young wizard is finding his way in the life of magic. On the other had the Book of Evolution is a non-fictitious book that has very little to do with magic and even less with wizardry. Again the theme of the book decides the correlation between the varibales. 
+
+
+# Results
+
+In this section we see the very thing we predicted. Firstly, @fig-pred_plots-1 and @tbl-modelSum-1 model frequency of "nature" in the Book of Evolution. @fig-pred_plots-2 and @tbl-modelSum-2 model frequency of "nature" in Harry Potter and @fig-pred_plots-3 and @tbl-modelSum-3 model frequency of "magic" in the Book of Evolution. Lastly, @fig-pred_plots-4 and @tbl-modelSum-4 model frequency of "magic" in  Harry Potter. We see that our prediction about  @fig-pred_plots-1 is true as we see a positive correlation. Same with  @fig-pred_plots-4. However in  @fig-pred_plots-2 and  @fig-pred_plots-3, instead of negative correlation we see there is zero correlation which makes sense as there is no connection between the words and their respective text. 
+
 ```{r}
 #| echo: false
 #| warning: false
@@ -201,8 +239,22 @@ harry_nature <- readRDS("../models/harry_nature.rds")
 #| echo: false
 #| warning: false
 #| message: false
-#| label: fig-nature_pred_darwin
-#| fig-cap: "Predicted number of \"nature\"-realted words in each line based on number of words in Darwin's Book "
+
+darwin_magic <- readRDS("../models/darwin_magic.rds")
+
+harry_magic <- readRDS("../models/harry_magic.rds")
+```
+
+## Prediction Plots
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+#| label: fig-pred_plots
+#| layout-ncol: 2
+#| fig-cap: "Predicted plots for each book "
+#| fig-subcap: ["Predicted number of \"nature\"-realted words in each line based on number of words in Darwin's Book ", "Predicted number of \"nature\"-realted words in each line based on number of words in Harry Potter ", "Predicted number of \"magic\"-realted words in each line based on number of words in Darwin's Book", "Predicted number of \"magic\"-realted words in each line based on number of words in Harry Potter"]
 
 plot_predictions(darwin_nature, condition = "word_count") +
   labs(
@@ -210,15 +262,6 @@ plot_predictions(darwin_nature, condition = "word_count") +
     y = "Average number of \"natural\"s in the first 10 lines"
   ) +
   theme_classic()
-```
-positive correlation it seems
-
-```{r}
-#| echo: false
-#| warning: false
-#| message: false
-#| label: fig-nature_pred_harry
-#| fig-cap: "Predicted number of \"nature\"-realted words in each line based on number of words in Harry Potter "
 
 
 plot_predictions(harry_nature, condition = "word_count") +
@@ -227,56 +270,14 @@ plot_predictions(harry_nature, condition = "word_count") +
     y = "Average number of \"natural\"s in the first 10 lines"
   ) +
   theme_classic()
-```
-No correlation at all
-
-### Model justification
-
-We predict to see that there is a positive correlation in Darwin's text but not in Harry Potter due to the difference in topics.
-
-## "Magic" and the 2 texts
-Define $y_i$ is the number of times "magic" or "miracle" appeared in the text and the explanatory variable is the number of words in the line.
-
-\begin{align} 
-y_i|\lambda_i &\sim \mbox{Poisson}(\lambda_i) \\
-\mbox{log}(\lambda_i) &= \beta_0 + \beta_1 \times \mbox{Number } \mbox{of } \mbox{Words}_i\\
-\beta_0 &\sim \mbox{Normal}(0, 2.5) \\
-\beta_1 &\sim \mbox{Normal}(0, 2.5) \\
-\end{align}
 
 
-We run the model in R [@citeR] using the `rstanarm` package of @rstanarm. We use the default priors from `rstanarm`.
-```{r}
-#| echo: false
-#| warning: false
-#| message: false
-
-darwin_magic <- readRDS("../models/darwin_magic.rds")
-
-harry_magic <- readRDS("../models/harry_magic.rds")
-```
-
-```{r}
-#| echo: false
-#| warning: false
-#| message: false
-#| label: fig-magic_pred_darwin
-#| fig-cap: "Predicted number of \"magic\"-realted words in each line based on number of words in Darwin's Book "
 plot_predictions(darwin_magic, condition = "word_count") +
   labs(
     x = "Number of words",
     y = "Average number of \"magic\"s or \"miracle\"s appearing"
   ) +
   theme_classic()
-```
-As we can see here there is almost no correlation at all. 
-
-```{r}
-#| echo: false
-#| warning: false
-#| message: false
-#| label: fig-magic_pred_harry
-#| fig-cap: "Predicted number of \"magic\"-realted words in each line based on number of words in Harry Potter "
 
 
 plot_predictions(harry_magic, condition = "word_count") +
@@ -287,20 +288,15 @@ plot_predictions(harry_magic, condition = "word_count") +
   theme_classic()
 ```
 
-### Model justification
 
-We predict to see that there is a positive correlation in Harry Potter but not in Darwin's text due to the difference in topics.
-
-
-# Results
-
-Our results are summarized below.
-
+## Model Summary
 ```{r}
 #| echo: false
 #| eval: true
-#| label: tbl-darwin_nature
-#| tbl-cap: "Model Summary showcasing the correlation coeffcient for Darwin's evolution book and the word nature"
+#| label: tbl-modelSum
+#| layout-ncol: 2
+#| tbl-cap: "Model Summaries"
+#| tbl-subcap: ["Model Summary showcasing the correlation coeffcient for Darwin's evolution book and the word nature", "Model Summary showcasing the correlation coeffcient for  Harry Potter and The Prisoner of Azkaban and the word nature", "Model Summary showcasing the correlation coeffcient for Darwin's evolution book and the word magic", "Model Summary showcasing the correlation coeffcient for Harry Potter and The Prisoner of Azkaban and the word magic" ]
 #| warning: false
 
 modelsummary::modelsummary(
@@ -310,32 +306,6 @@ modelsummary::modelsummary(
   statistic = "mad",
   fmt = 2
 )
-```
-
-```{r}
-#| echo: false
-#| eval: true
-#| label: tbl-darwin_magic
-#| tbl-cap: "Model Summary showcasing the correlation coeffcient for Darwin's evolution book and the word magic"
-#| warning: false
-
-modelsummary::modelsummary(
-  list(
-    "darwin and magic" = darwin_magic
-  ),
-  statistic = "mad",
-  fmt = 2
-)
-```
-
-
-
-```{r}
-#| echo: false
-#| eval: true
-#| label: tbl-harry_nature
-#| tbl-cap: "Model Summary showcasing the correlation coeffcient for  Harry Potter and The Prisoner of Azkaban and the word nature"
-#| warning: false
 
 modelsummary::modelsummary(
   list(
@@ -344,14 +314,14 @@ modelsummary::modelsummary(
   statistic = "mad",
   fmt = 2
 )
-```
 
-```{r}
-#| echo: false
-#| eval: true
-#| label: tbl-harry_magic
-#| tbl-cap: "Model Summary showcasing the correlation coeffcient for Harry Potter and The Prisoner of Azkaban and the word magic"
-#| warning: false
+modelsummary::modelsummary(
+  list(
+    "darwin and magic" = darwin_magic
+  ),
+  statistic = "mad",
+  fmt = 2
+)
 
 modelsummary::modelsummary(
   list(
@@ -363,25 +333,32 @@ modelsummary::modelsummary(
 ```
 
 
+
+
+
+
+
 # Discussion
 
-## Why is the result the way it is {#sec-first-point}
+## Finding and Analysis of Data
+  From the previous sections we see that there is a positive correlation between the number of times the word "natural" or "species" appears in Charles Darwin's book on the Origin of Species [@tbl-modelSum-1]. The correlation coefficient is in fact 0.05 meaning that when the number of words increases by 1, there is a 5% more chance that we will see the word nature again. This may not seem much but compared to our other text [@tbl-modelSum-2] it is a lot of information as the correlation factor is 0 meaning we have no way of knowing if the next word will be "nature" or "species" or neither. Similarly, with @tbl-modelSum-4, we see that the correlation coefficient is 0.09 meaning that with each increase in word count, we see a 9% more chance that the word "magic", "miracle" or "wizard" appears (contrary to @tbl-modelSum-3 with Darwin's book). This means that when the book is fictitious, it is more likely to see the words "magic", "miracle" or "wizard" (Like Harry Potter [@harry]) and when it is non-fiction you are more likely to see the words "natural" or "species" (Like The Book of Evolution [@darwin])
 
+## Importance to ML
+  Now to the driving and main point of the paper: how does all of this analysis relate to clustering? As explained previously we perform clustering on data sets that have no labels. Meaning we have a bunch of data and we don't know how to begin to categorize them. The easiest way to motivate this is by thinking of online libraries. When reading a book you are often told what the similar topics are and what similar books are as well. Although it may be likely this information is gathered through people reading and providing their analysis this is not very efficient. We must compensate the readers as well as compile the data. We must also assume that the data provided by the user is true as cross-checking will require more resources. Then we must hope that we have enough data to begin categorizing the books. When it requires this much effort to do something by hand we always try to find a much simpler solution with computers. 
+  The solution answers our second research question: clustering. Clustering using the help of the model analysis we did earlier will take away all the inefficiencies of doing these things by hand. By training a computer we can first feed it all the books we want to categorize. Then the computer will read through each of the books and calculate the correlation coefficient between the number of words and some keywords that we chose. In this paper the keywords happened to be "natural" and "species" or "magic", "miracle" and "wizard". With this, they are able to somewhat tell the theme of the book. If we were to feed it another Harry Potter book the correlation coefficient of how often the words "magic", "miracle" and "wizard" came up may be close to the coefficient for Harry Potter and the Prisoner of Azkaban. The computer is able to tell that the 2 books are related to each other, at least in terms of theme. We are then able to categorize the books based on topics. This is a very simple case however. In reality, the people running this model must first optimize the perfect group of words that allows us to group the data. The finished product may look something like this where each dot is a text and we are able to identify what each of the different categories are (image from @clustering):
+  ![Clustering](cluster.png)
+  
+  Now this is the very general and basic idea of clustering using Poisson regression. I am unsure if this model has been applied yet (as there are multiple other ways to categorize such data) but, there does seem to be evidence supporting that this process is used in practice or theory by this paper written in the Journal of Econometrics [@MACKINNON20232027].
+  
 
-## Importance
-
-## Third discussion point
 
 ## Weaknesses and next steps
+  Not all papers are perfect and neither is mine. Some limitations that can be included is that when copying each line of the textbooks, the cleaning process I used also left the first couple of index pages which include information about the authors and the chapters. This may cause a slight skew in our data as the content of the book does not include unnecessary information. The next weakness is that I am not an expert in Machine Learning algorithms. I used what I know about correlation coefficients in statistics and the concept of clustering from computer science and drew a connection to help the reader understand how the concept works.
+  With all of this in mind, the next steps are to clean the data of any other external content that does not add to the theme of the book as well as get experts on clustering to explain the process better. While on that road exploring the frequencies of other words may also help narrow down the themes of the text as we don't always have one theme related to one book. 
 
-Weaknesses and next steps should also be included.
 
-\newpage
-
-\appendix
-
-# Appendix {-}
-
+## Concluding Remarks
+  Statistics and Computer Science are very broad subjects in the worlds. They are also very useful so it is even better to combine them together to accomplish a task more efficiently. This paper shows one of those intersections and is able to explain it to the user using an analogy. So to answer the initial 2 research question, yes there is a correlation between a text and key thematic words and that analysis is transferable to machine learning, to help categorize data. Although there is some limitations of this paper but the key ideas still apply. 
 
 
 \newpage
